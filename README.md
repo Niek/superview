@@ -7,9 +7,11 @@ This is not a 1-1 copy of the GoPro algorithm, but an attempt to reach similar q
 Credits for the idea go to *Banelle*, who wrote the [initial (Python) implementation](https://intofpv.com/t-using-free-command-line-sorcery-to-fake-superview).
 
 Sample input image:
+
 ![alt text](sample-input.png "Sample input image")
 
-Sample output image:
+Sample output image (note how the center part is not stretched out):
+
 ![alt text](sample-output.png "Sample output image")
 
 ## Requirements
@@ -22,11 +24,11 @@ This program requires FFmpeg in your ``PATH``, please install it using one of th
 
 ## Installation
 
-Download a recent release from the releases page on GitHub. Or build from source using ``go build``.
+Download a recent release from the [releases page on GitHub](https://github.com/Niek/superview/releases). Or build from source using ``go build``.
 
 ## Usage
 
-To run the program, launch the program with the ``-i`` (input file) parameter. Optionally, you can provide a ``-o`` (output) and ``-b`` (bitrate) parameter. Full usage instructions:
+To run the program, launch the ``superview`` program with the ``-i`` (input file) parameter. Optionally, you can provide a ``-o`` (output) and ``-b`` (bitrate) parameter. Full usage instructions:
 
 ```
 Usage:
