@@ -6,13 +6,9 @@ This is not a 1-1 copy of the GoPro algorithm, but an attempt to reach similar q
 
 Credits for the idea go to *Banelle*, who wrote the [initial (Python) implementation](https://intofpv.com/t-using-free-command-line-sorcery-to-fake-superview).
 
-Sample input image:
+Here is a quick animation showing the scaling, note how the text in the center stays the same:
 
-![alt text](sample-input.png "Sample input image")
-
-Sample output image (note how the center part is not stretched out):
-
-![alt text](sample-output.png "Sample output image")
+![alt text](sample.gif "Sample of the scaling result")
 
 ## Requirements
 
