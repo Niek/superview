@@ -16,7 +16,7 @@ do
     platform_split=(${platform//\// })
     GOOS=${platform_split[0]}
     GOARCH=${platform_split[1]}
-    output_name='build/superview-'$GOOS'-'$GOARCH'-'$VERSION
+    output_name='build/superview-'$GOOS'-'$GOARCH'-v'$VERSION
     if [ $GOOS = "windows" ]; then
         output_name+='.exe'
     fi  
@@ -27,3 +27,6 @@ do
         exit 1
     fi
 done
+
+git tag v${VERSION}
+git push origin --tags
