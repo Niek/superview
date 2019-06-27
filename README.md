@@ -1,6 +1,6 @@
 # Superview
 
-This is a small Go program that takes a 4:3 aspect ratio video file, and transforms it to a 16:9 video using the  [GoPro SuperView](https://gopro.com/help/articles/question_answer/What-is-SuperView) method. This means that the image is not naively stretched, but the outer areas are stretched while the center parts keep the original aspect rate.
+This is a small Go program that takes a 4:3 aspect ratio video file, and transforms it to a 16:9 video using the  [GoPro SuperView](https://gopro.com/help/articles/question_answer/What-is-SuperView) method. This means that the image is not naively scaled, but a dynamic scaling is applied where the outer areas are stretched more while the center parts stay close to the original aspect rate.
 
 This is not a 1-1 copy of the GoPro algorithm, but an attempt to reach similar quality of output using the open-source [FFmpeg](https://ffmpeg.org/) encoder.
 
