@@ -2,13 +2,17 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -20,6 +24,7 @@ var opts struct {
 }
 
 func main() {
+	// Parse flags
 	flags.Parse(&opts)
 
 	_, err := os.Stat(opts.Input)
@@ -27,6 +32,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Check for available codecs
 	codecs, err := exec.Command("ffmpeg", "-codecs").CombinedOutput()
 	codecsString := string(codecs)
 
@@ -38,7 +44,8 @@ func main() {
 	fmt.Printf("H.264 support: %t\n", strings.Contains(codecsString, "H.264"))
 	fmt.Printf("H.265/HEVC support: %t\n", strings.Contains(codecsString, "H.265"))
 
-	out, err := exec.Command("ffprobe", "-i", opts.Input, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,bit_rate", "-of", "csv=s=*:p=0").CombinedOutput()
+	// Check specs of the input video (codec, dimensions, duration, bitrate)
+	out, err := exec.Command("ffprobe", "-i", opts.Input, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-of", "csv=s=*:p=0").CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,7 +54,8 @@ func main() {
 	codec := info[0]
 	inX, err := strconv.Atoi(info[1])
 	inY, err := strconv.Atoi(info[2])
-	bitrate, err := strconv.Atoi(info[3])
+	duration, err := strconv.ParseFloat(info[3], 64)
+	bitrate, err := strconv.Atoi(info[4])
 
 	if opts.Bitrate == 0 {
 		opts.Bitrate = bitrate
@@ -56,8 +64,9 @@ func main() {
 	outX := int(float64(inX)/(4.0/3.0)*(16.0/9.0)) / 2 * 2 // multiplier of 2
 	outY := inY
 
-	fmt.Printf("Scaling input file %s (codec: %s) from %d*%d to %d*%d using superview scaling\n", opts.Input, codec, inX, inY, outX, outY)
+	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling\n", opts.Input, codec, int(duration), inX, inY, outX, outY)
 
+	// Generate filter files
 	fX, err := os.Create("x.pgm")
 	fY, err := os.Create("y.pgm")
 	defer fX.Close()
@@ -92,9 +101,44 @@ func main() {
 
 	fmt.Printf("Filter files generated, re-encoding video at bitrate %d MB/s\n", opts.Bitrate/1024/1024)
 
-	out, err = exec.Command("ffmpeg", "-hide_banner", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", codec, "-b:v", strconv.Itoa(bitrate), "-c:a", "copy", "-x265-params", "log-level=error", opts.Output).CombinedOutput()
+	// Starting encoder, write progress to stdout pipe
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", codec, "-b:v", strconv.Itoa(bitrate), "-c:a", "copy", "-x265-params", "log-level=error", opts.Output)
+	stdout, err := cmd.StdoutPipe()
+	rd := bufio.NewReader(stdout)
 
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Kill encoder process on Ctrl+C
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigC
+		cmd.Process.Kill()
+	}()
+
+	// Read and parse progress
+	for {
+		line, _, err := rd.ReadLine()
+
+		if err == io.EOF {
+			fmt.Printf("\r")
+			break
+		}
+
+		if bytes.Contains(line, []byte("out_time_ms=")) {
+			time := bytes.Replace(line, []byte("out_time_ms="), nil, 1)
+			timeF, _ := strconv.ParseFloat(string(time), 64)
+			fmt.Printf("\rEncoding progress: %.2f%%", timeF/(duration*10000))
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
 		log.Fatal(err)
 	}
 
