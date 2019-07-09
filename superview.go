@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -45,26 +46,35 @@ func main() {
 	fmt.Printf("H.265/HEVC support: %t\n", strings.Contains(codecsString, "H.265"))
 
 	// Check specs of the input video (codec, dimensions, duration, bitrate)
-	out, err := exec.Command("ffprobe", "-i", opts.Input, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-of", "csv=s=*:p=0").CombinedOutput()
+	out, err := exec.Command("ffprobe", "-i", opts.Input, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-print_format", "json").CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	info := strings.Split(strings.TrimSuffix(string(out), "\n"), "*")
-	codec := info[0]
-	inX, err := strconv.Atoi(info[1])
-	inY, err := strconv.Atoi(info[2])
-	duration, err := strconv.ParseFloat(info[3], 64)
-	bitrate, err := strconv.Atoi(info[4])
+	// Parse into struct
+	var specs struct {
+		Streams []struct {
+			Codec    string `json:"codec_name"`
+			Width    int
+			Height   int
+			Duration string
+			Bitrate  string `json:"bit_rate"`
+		}
+	}
+	json.Unmarshal(out, &specs)
 
+	// Parse duration to float
+	duration, _ := strconv.ParseFloat(specs.Streams[0].Duration, 64)
+
+	// Parse bitrate to int
 	if opts.Bitrate == 0 {
-		opts.Bitrate = bitrate
+		opts.Bitrate, _ = strconv.Atoi(specs.Streams[0].Bitrate)
 	}
 
-	outX := int(float64(inX)/(4.0/3.0)*(16.0/9.0)) / 2 * 2 // multiplier of 2
-	outY := inY
+	outX := int(float64(specs.Streams[0].Width)/(4.0/3.0)*(16.0/9.0)) / 2 * 2 // multiplier of 2
+	outY := specs.Streams[0].Height
 
-	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling\n", opts.Input, codec, int(duration), inX, inY, outX, outY)
+	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling\n", opts.Input, specs.Streams[0].Codec, int(duration), specs.Streams[0].Width, specs.Streams[0].Height, outX, outY)
 
 	// Generate filter files
 	fX, err := os.Create("x.pgm")
@@ -81,8 +91,8 @@ func main() {
 	for y := 0; y < outY; y++ {
 		for x := 0; x < outX; x++ {
 			tx := (float64(x)/float64(outX) - 0.5) * 2.0
-			sx := float64(x) - float64(outX-inX)/2.0
-			offset := math.Pow(tx, 2) * (float64(outX-inX) / 2.0)
+			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0
+			offset := math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0)
 			if tx < 0 {
 				offset *= -1
 			}
@@ -102,7 +112,7 @@ func main() {
 	fmt.Printf("Filter files generated, re-encoding video at bitrate %d MB/s\n", opts.Bitrate/1024/1024)
 
 	// Starting encoder, write progress to stdout pipe
-	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", codec, "-b:v", strconv.Itoa(bitrate), "-c:a", "copy", "-x265-params", "log-level=error", opts.Output)
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", specs.Streams[0].Codec, "-b:v", strconv.Itoa(opts.Bitrate), "-c:a", "copy", "-x265-params", "log-level=error", opts.Output)
 	stdout, err := cmd.StdoutPipe()
 	rd := bufio.NewReader(stdout)
 
