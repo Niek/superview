@@ -71,12 +71,12 @@ func main() {
 		opts.Bitrate, _ = strconv.Atoi(specs.Streams[0].Bitrate)
 	}
 
-	outX := int(float64(specs.Streams[0].Width)/(4.0/3.0)*(16.0/9.0)) / 2 * 2 // multiplier of 2
+	outX := int(float64(specs.Streams[0].Height)*(16.0/9.0)) / 2 * 2 // multiplier of 2
 	outY := specs.Streams[0].Height
 
 	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling\n", opts.Input, specs.Streams[0].Codec, int(duration), specs.Streams[0].Width, specs.Streams[0].Height, outX, outY)
 
-	// Generate filter files
+	// Generate PGM P2 files for remap filter, see https://trac.ffmpeg.org/wiki/RemapFilter
 	fX, err := os.Create("x.pgm")
 	fY, err := os.Create("y.pgm")
 	defer fX.Close()
@@ -90,15 +90,16 @@ func main() {
 
 	for y := 0; y < outY; y++ {
 		for x := 0; x < outX; x++ {
-			tx := (float64(x)/float64(outX) - 0.5) * 2.0
-			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0
-			offset := math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0)
+			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0              // x - width diff/2
+			tx := (float64(x)/float64(outX) - 0.5) * 2.0                             // (x/width - 0.5) * 2
+			offset := math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0) // tx^2 * width diff/2
 			if tx < 0 {
 				offset *= -1
 			}
 
 			wX.WriteString(strconv.Itoa(int(sx - offset)))
 			wX.WriteString(" ")
+
 			wY.WriteString(strconv.Itoa(y))
 			wY.WriteString(" ")
 		}
