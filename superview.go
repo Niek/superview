@@ -145,7 +145,7 @@ func main() {
 		if bytes.Contains(line, []byte("out_time_ms=")) {
 			time := bytes.Replace(line, []byte("out_time_ms="), nil, 1)
 			timeF, _ := strconv.ParseFloat(string(time), 64)
-			fmt.Printf("\rEncoding progress: %.2f%%", timeF/(duration*10000))
+			fmt.Printf("\rEncoding progress: %.2f%%", math.Min(timeF/(duration*10000), 100))
 		}
 	}
 
