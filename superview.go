@@ -113,7 +113,7 @@ func main() {
 	fmt.Printf("Filter files generated, re-encoding video at bitrate %d MB/s\n", opts.Bitrate/1024/1024)
 
 	// Starting encoder, write progress to stdout pipe
-	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", specs.Streams[0].Codec, "-b:v", strconv.Itoa(opts.Bitrate), "-c:a", "copy", "-x265-params", "log-level=error", opts.Output)
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", opts.Input, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", specs.Streams[0].Codec, "-b:v", strconv.Itoa(opts.Bitrate), "-c:a", "aac", "-x265-params", "log-level=error", opts.Output)
 	stdout, err := cmd.StdoutPipe()
 	rd := bufio.NewReader(stdout)
 
