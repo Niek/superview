@@ -98,11 +98,11 @@ func main() {
 	for y := 0; y < outY; y++ {
 		for x := 0; x < outX; x++ {
 			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0 // x - width diff/2
+			tx := (float64(x)/float64(outX) - 0.5) * 2.0
 
 			var offset float64
 
 			if opts.Squeeze {
-				tx := (float64(x)/float64(outX) - 0.5) * 2.0
 				inv := 1 - math.Abs(tx)
 
 				offset = inv*(float64((outX/16)*7)/2.0) - math.Pow((inv/16)*7, 2)*(float64((outX/7)*16)/2.0)
@@ -113,7 +113,6 @@ func main() {
 
 				wX.WriteString(strconv.Itoa(int(sx + offset)))
 			} else {
-				tx := (float64(x)/float64(outX) - 0.5) * 2.0                            // (x/width - 0.5) * 2
 				offset = math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0) // tx^2 * width diff/2
 
 				if tx < 0 {
