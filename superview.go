@@ -22,7 +22,7 @@ var opts struct {
 	Input   string `short:"i" long:"input" description:"The input video filename" value-name:"FILE" required:"true"`
 	Output  string `short:"o" long:"output" description:"The output video filename" value-name:"FILE" required:"false" default:"output.mp4"`
 	Bitrate int    `short:"b" long:"bitrate" description:"The bitrate in bytes/second to encode in. If not specified, take the same bitrate as the input file" value-name:"BITRATE" required:"false"`
-	Squeeze bool   `short:"s" long:"squeeze" description:"Squeeze an already stretched 16:9 video"`
+	Squeeze bool   `short:"s" long:"squeeze" description:"Squeeze 4:3 video stretched to 16:9 (e.g. Caddx Tarsier 2.7k60)"`
 }
 
 func main() {
@@ -98,7 +98,7 @@ func main() {
 	for y := 0; y < outY; y++ {
 		for x := 0; x < outX; x++ {
 			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0 // x - width diff/2
-			tx := (float64(x)/float64(outX) - 0.5) * 2.0
+			tx := (float64(x)/float64(outX) - 0.5) * 2.0                // (x/width - 0.5) * 2
 
 			var offset float64
 
