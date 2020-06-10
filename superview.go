@@ -22,6 +22,7 @@ var opts struct {
 	Input   string `short:"i" long:"input" description:"The input video filename" value-name:"FILE" required:"true"`
 	Output  string `short:"o" long:"output" description:"The output video filename" value-name:"FILE" required:"false" default:"output.mp4"`
 	Bitrate int    `short:"b" long:"bitrate" description:"The bitrate in bytes/second to encode in. If not specified, take the same bitrate as the input file" value-name:"BITRATE" required:"false"`
+	Squeeze bool   `short:"s" long:"squeeze" description:"Squeeze 4:3 video stretched to 16:9 (e.g. Caddx Tarsier 2.7k60)"`
 }
 
 func main() {
@@ -71,10 +72,16 @@ func main() {
 		opts.Bitrate, _ = strconv.Atoi(specs.Streams[0].Bitrate)
 	}
 
-	outX := int(float64(specs.Streams[0].Height)*(16.0/9.0)) / 2 * 2 // multiplier of 2
+	var outX int
+
+	if opts.Squeeze {
+		outX = specs.Streams[0].Width
+	} else {
+		outX = int(float64(specs.Streams[0].Height)*(16.0/9.0)) / 2 * 2 // multiplier of 2
+	}
 	outY := specs.Streams[0].Height
 
-	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling\n", opts.Input, specs.Streams[0].Codec, int(duration), specs.Streams[0].Width, specs.Streams[0].Height, outX, outY)
+	fmt.Printf("Scaling input file %s (codec: %s, duration: %d secs) from %d*%d to %d*%d using superview scaling. Squeeze: %t\n", opts.Input, specs.Streams[0].Codec, int(duration), specs.Streams[0].Width, specs.Streams[0].Height, outX, outY, opts.Squeeze)
 
 	// Generate PGM P2 files for remap filter, see https://trac.ffmpeg.org/wiki/RemapFilter
 	fX, err := os.Create("x.pgm")
@@ -90,14 +97,31 @@ func main() {
 
 	for y := 0; y < outY; y++ {
 		for x := 0; x < outX; x++ {
-			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0              // x - width diff/2
-			tx := (float64(x)/float64(outX) - 0.5) * 2.0                             // (x/width - 0.5) * 2
-			offset := math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0) // tx^2 * width diff/2
-			if tx < 0 {
-				offset *= -1
+			sx := float64(x) - float64(outX-specs.Streams[0].Width)/2.0 // x - width diff/2
+			tx := (float64(x)/float64(outX) - 0.5) * 2.0                // (x/width - 0.5) * 2
+
+			var offset float64
+
+			if opts.Squeeze {
+				inv := 1 - math.Abs(tx)
+
+				offset = inv*(float64((outX/16)*7)/2.0) - math.Pow((inv/16)*7, 2)*(float64((outX/7)*16)/2.0)
+
+				if tx < 0 {
+					offset *= -1
+				}
+
+				wX.WriteString(strconv.Itoa(int(sx + offset)))
+			} else {
+				offset = math.Pow(tx, 2) * (float64(outX-specs.Streams[0].Width) / 2.0) // tx^2 * width diff/2
+
+				if tx < 0 {
+					offset *= -1
+				}
+
+				wX.WriteString(strconv.Itoa(int(sx - offset)))
 			}
 
-			wX.WriteString(strconv.Itoa(int(sx - offset)))
 			wX.WriteString(" ")
 
 			wY.WriteString(strconv.Itoa(y))
