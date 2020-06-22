@@ -31,6 +31,7 @@ func main() {
 
 	_, err := os.Stat(opts.Input)
 	if err != nil {
+		log.Fatal(fmt.Sprintf("Error opening input file: %s", opts.Input))
 		log.Fatal(err)
 	}
 
@@ -49,6 +50,7 @@ func main() {
 	// Check specs of the input video (codec, dimensions, duration, bitrate)
 	out, err := exec.Command("ffprobe", "-i", opts.Input, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-print_format", "json").CombinedOutput()
 	if err != nil {
+		log.Fatal(fmt.Sprintf("Error running ffprobe, output is:\n%s", out))
 		log.Fatal(err)
 	}
 
@@ -146,6 +148,7 @@ func main() {
 	}
 
 	if err := cmd.Start(); err != nil {
+		log.Fatal(fmt.Sprintf("Error starting ffmpeg, output is:\n%s", stdout))
 		log.Fatal(err)
 	}
 
@@ -174,6 +177,7 @@ func main() {
 	}
 
 	if err := cmd.Wait(); err != nil {
+		log.Fatal(fmt.Sprintf("Error running ffmpeg, output is:\n%s", stdout))
 		log.Fatal(err)
 	}
 
