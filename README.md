@@ -23,11 +23,13 @@ This program requires FFmpeg in your `PATH`, please install it using one of thes
 
 ## Installation
 
-Download a recent release from the [releases page on GitHub](https://github.com/Niek/superview/releases). Or build from source using `go build`.
+Download a recent release from the [releases page on GitHub](https://github.com/Niek/superview/releases). There are two versions: a command line program called `superview` and a graphical version called `superview-gui`.
 
 ## Usage
 
-To run the program, launch the `superview` program with the `-i` (input file) parameter. Optionally, you can provide a `-o` (output) and `-b` (bitrate) parameter. Full usage instructions:
+To run `superview-gui`, simply double-click the icon. Choose an input video file, optionally change some settings and click "Encode". The program will ask you where to save the output.
+
+To run the CLI program, launch `superview` program with the `-i` (input file) parameter. Optionally, you can provide a `-o` (output) and `-b` (bitrate) parameter. Full usage instructions:
 
 ```
 Usage:
@@ -42,6 +44,10 @@ Application Options:
 Help Options:
   -h, --help               Show this help message
 ```
+
+## Development
+
+If you want superview from source, run `go build superview.go common.go`. To build the GUI version, run `go build superview-gui.go common.go`. See [build.sh](/build.sh) for an example how to cross-compile.
 
 ## Contributors ✨
 

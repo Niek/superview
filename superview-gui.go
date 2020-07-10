@@ -34,7 +34,7 @@ func main() {
 	bitrate := widget.NewEntry()
 	bitrate.SetPlaceHolder("Set output bitrate in bytes/second if you want to change")
 
-	start := widget.NewButton("Start", func() {
+	start := widget.NewButton("Encode the video...", func() {
 		dialog.ShowFileSave(func(file fyne.URIWriteCloser, err error) {
 			if err == nil && file == nil {
 				log.Println("File saving cancelled")
@@ -81,7 +81,7 @@ func main() {
 	})
 	start.Disable()
 
-	open := widget.NewButton("Open input video", func() {
+	open := widget.NewButton("Open input video...", func() {
 		fd := dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
 			if err == nil && file == nil {
 				log.Println("File opening cancelled")
