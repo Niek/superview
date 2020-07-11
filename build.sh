@@ -24,20 +24,19 @@ for program in "superview-cli" "superview-gui"; do
         platform_split=(${platform//\// })
         GOOS=${platform_split[0]}
         GOARCH=${platform_split[1]}
+        output_name="${program}-${GOOS}-${GOARCH}-v${VERSION}"
+        if [ $GOOS == "windows" ]; then
+            output_name+=".exe"
+        fi
 
         if [ "$program" == "superview-cli" ]; then
-            output_name="build/${program}-${GOOS}-${GOARCH}-v${VERSION}"
-            if [ $GOOS == "windows" ]; then
-                output_name+=".exe"
-            fi
-            
+            output_name="build/${output_name}"
             env GOOS=$GOOS GOARCH=$GOARCH go build -o $output_name ${program}.go common.go
             if [ $? -ne 0 ]; then
                 echo "An error has occurred! Aborting the script execution..."
                 exit 1
             fi
         else
-            output_name="${program}-${GOOS}-${GOARCH}-v${VERSION}"
             fyne-cross ${GOOS} -silent -arch ${GOARCH} -output ${output_name} "${program}.go common.go"
             output_name="fyne-cross/dist/${GOOS}-${GOARCH}/${output_name}"
             if [ $GOOS == "windows" ]; then
