@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/dialog"
+	"fyne.io/fyne/layout"
 	"fyne.io/fyne/storage"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
@@ -103,6 +104,7 @@ func main() {
 				dialog.ShowError(err, window)
 				return
 			}
+			info.SetText(fmt.Sprintf("%s\nFile opened: %s\nInfo: %vx%v px, %s @ %v Mb/s, %.1f secs", info.Text, uri, video.Streams[0].Width, video.Streams[0].Height, video.Streams[0].Codec, video.Streams[0].BitrateInt/1024/1024, video.Streams[0].DurationFloat))
 			start.Enable()
 		}, window)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp4", ".avi", ".MP4", ".AVI"}))
@@ -112,6 +114,7 @@ func main() {
 	window.SetContent(widget.NewVBox(
 		title,
 		info,
+		layout.NewSpacer(),
 		open,
 		squeeze,
 		bitrate,
@@ -121,7 +124,7 @@ func main() {
 		}),
 	))
 
-	window.Resize(fyne.NewSize(640, 480))
+	window.Resize(fyne.NewSize(640, 330))
 
 	codecs, err := checkCodecs()
 	if err != nil {
