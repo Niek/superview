@@ -7,8 +7,8 @@ if [ $# -ne 1 ]; then
 fi
 
 if ! command -v fyne-cross &> /dev/null; then
-    echo "This build script requires fyne-cross to be installed:"
-    echo "go get github.com/lucor/fyne-cross/cmd/fyne-cross"
+    echo "This build script requires fyne-cross v2 to be installed:"
+    echo "go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross"
     exit
 fi
 
@@ -19,13 +19,13 @@ echo "Build packages with version number ${VERSION}"
 platforms=("windows/amd64" "windows/386" "darwin/amd64" "linux/386" "linux/amd64")
 files=()
 
-for program in "superview" "superview-gui"; do
+for program in "superview-cli" "superview-gui"; do
     for platform in "${platforms[@]}"; do
         platform_split=(${platform//\// })
         GOOS=${platform_split[0]}
         GOARCH=${platform_split[1]}
 
-        if [ "$program" == "superview" ]; then
+        if [ "$program" == "superview-cli" ]; then
             output_name="build/${program}-${GOOS}-${GOARCH}-v${VERSION}"
             if [ $GOOS == "windows" ]; then
                 output_name+=".exe"

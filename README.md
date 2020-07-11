@@ -11,29 +11,31 @@ Credits for the idea go to _Banelle_, who wrote the [initial (Python) implementa
 
 Here is a quick animation showing the scaling, note how the text in the center stays the same:
 
-![alt text](sample.gif "Sample of the scaling result")
+![alt text](.github/sample.gif "Sample of the scaling result")
 
 ## Requirements
 
-This program requires FFmpeg in your `PATH`, please install it using one of these ways:
+This program requires FFmpeg to be installed on your computer. If needed, please install it using one of these ways:
 
-- Linux: install from your local package manager, for example: `apt instal ffmpeg`
-- Windows: Download from https://ffmpeg.zeranoe.com/builds/
-- macOS: Download from https://ffmpeg.zeranoe.com/builds/ or install using Homebrew: `brew install ffmpeg`
+- **Linux**: install from your local package manager, for example: `apt instal ffmpeg`
+- **Windows**: Download from https://ffmpeg.zeranoe.com/builds/ and extract the ZIP file in the same directory as superview
+- **macOS**: Download from https://ffmpeg.zeranoe.com/builds/ and put in the same folder as superview, or install using Homebrew: `brew install ffmpeg`
 
 ## Installation
 
-Download a recent release from the [releases page on GitHub](https://github.com/Niek/superview/releases). There are two versions: a command line program called `superview` and a graphical version called `superview-gui`.
+Download the latest release from the [releases page on GitHub](https://github.com/Niek/superview/releases). There are two versions: a command line program called `superview-cli` and a graphical version called `superview-gui`.
 
 ## Usage
 
 To run `superview-gui`, simply double-click the icon. Choose an input video file, optionally change some settings and click "Encode". The program will ask you where to save the output.
 
-To run the CLI program, launch `superview` program with the `-i` (input file) parameter. Optionally, you can provide a `-o` (output) and `-b` (bitrate) parameter. Full usage instructions:
+![alt text](.github/sample-gui.png "Sample of GUI")
+
+To use `superview-cli`, run the program with the `-i` (input file) parameter. Optionally, you can provide a `-o` (output) and `-b` (bitrate) parameter. Full usage instructions:
 
 ```
 Usage:
-  superview [OPTIONS]
+  superview-cli [OPTIONS]
 
 Application Options:
   -i, --input=FILE         The input video filename
@@ -47,7 +49,7 @@ Help Options:
 
 ## Development
 
-If you want superview from source, run `go build superview.go common.go`. To build the GUI version, run `go build superview-gui.go common.go`. See [build.sh](/build.sh) for an example how to cross-compile.
+If you want superview from source, run `go build superview-cli.go common.go`. To build the GUI version, run `go build superview-gui.go common.go`. See [build.sh](/build.sh) for an example how to cross-compile.
 
 ## Contributors ✨
 
