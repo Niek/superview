@@ -54,7 +54,6 @@ for program in "superview-cli" "superview-gui"; do
     done
 done
 
-exit
 git tag v${VERSION}
 git push origin --tags
 hub release create -do $(for f in "${files[@]}"; do echo "-a "$f; done) -m "Release v${VERSION}" v${VERSION}
