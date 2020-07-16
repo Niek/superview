@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
@@ -93,7 +94,7 @@ func main() {
 				return
 			}
 
-			uri := file.URI().String()
+			uri := strings.ReplaceAll(file.URI().String(), "file://", "")
 			err = file.Close()
 			if err != nil {
 				fyne.LogError("Failed to close stream", err)
