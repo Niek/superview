@@ -44,7 +44,7 @@ func checkFfmpeg() (map[string]string, error) {
 
 	// split on newline, skip first line
 	accels, err := exec.Command("ffmpeg", "-hwaccels", "-hide_banner").CombinedOutput()
-	accelsArr := strings.Split(string(accels), "\n")
+	accelsArr := strings.Split(strings.ReplaceAll(string(accels), "\r\n", "\n"), "\n")
 	for i := 1; i < len(accelsArr); i++ {
 		if len(accelsArr[i]) != 0 {
 			ret["accels"] += accelsArr[i] + ","
@@ -53,7 +53,7 @@ func checkFfmpeg() (map[string]string, error) {
 
 	// split on newline, skip first 10 lines
 	encoders, err := exec.Command("ffmpeg", "-encoders", "-hide_banner").CombinedOutput()
-	encodersArr := strings.Split(string(encoders), "\n")
+	encodersArr := strings.Split(strings.ReplaceAll(string(encoders), "\r\n", "\n"), "\n")
 	for i := 10; i < len(encodersArr); i++ {
 		if strings.Index(encodersArr[i], " V") == 0 {
 			enc := strings.Split(encodersArr[i], " ")
