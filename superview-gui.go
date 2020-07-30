@@ -17,6 +17,8 @@ import (
 
 func main() {
 	var video *VideoSpecs
+	var ffmpeg map[string]string
+	var encoder *widget.Select
 
 	app := app.New()
 	app.Settings().SetTheme(theme.LightTheme())
@@ -69,9 +71,18 @@ func main() {
 					br = video.Streams[0].BitrateInt
 				}
 
-				err = encodeVideo(video, br, uri, func(v float64) { prog.SetValue(v / 100) })
-				if err != nil {
+				enc := video.Streams[0].Codec
+				switch encoder.Selected {
+				case "Force H264 encoder":
+					enc = "h264"
+					break
+				case "Force H265 encoder":
+					enc = "h265"
+					break
+				}
 
+				err = encodeVideo(video, findEncoder(enc, ffmpeg), br, uri, func(v float64) { prog.SetValue(v / 100) })
+				if err != nil {
 					dialog.ShowError(err, window)
 					return
 				}
@@ -112,12 +123,32 @@ func main() {
 		fd.Show()
 	})
 
+	ffmpeg, err := checkFfmpeg()
+	if err != nil {
+		dialog.ShowError(err, window)
+		open.Disable()
+	}
+	info.SetText(fmt.Sprintf("ffmpeg version: %s\nHardware accellerators: %s\nH.264 encoders: %s\nH.265/HEVC encoders: %s", ffmpeg["version"], ffmpeg["accels"], ffmpeg["h264"], ffmpeg["h265"]))
+
+	encoderOptions := []string{"Use same encoder as input file"}
+	if len(ffmpeg["h264"]) > 0 {
+		encoderOptions = append(encoderOptions, "Force H264 encoder")
+	}
+	if len(ffmpeg["h265"]) > 0 {
+		encoderOptions = append(encoderOptions, "Force H265 encoder")
+	}
+	encoder = widget.NewSelect(encoderOptions, func(s string) {
+
+	})
+	encoder.SetSelected(encoderOptions[0])
+
 	window.SetContent(widget.NewVBox(
 		title,
 		info,
 		layout.NewSpacer(),
 		open,
 		squeeze,
+		encoder,
 		bitrate,
 		start,
 		widget.NewButton("Quit", func() {
@@ -126,13 +157,6 @@ func main() {
 	))
 
 	window.Resize(fyne.NewSize(640, 330))
-
-	codecs, err := checkCodecs()
-	if err != nil {
-		dialog.ShowError(err, window)
-		open.Disable()
-	}
-	info.SetText(fmt.Sprintf("ffmpeg version: %s\nH.264 support: %s\nH.265/HEVC support: %s", codecs["version"], codecs["h264"], codecs["h265"]))
 
 	window.ShowAndRun()
 }

@@ -30,19 +30,44 @@ type VideoSpecs struct {
 	}
 }
 
-func checkCodecs() (map[string]string, error) {
-	// Check for available codecs
-	codecs, err := exec.Command("ffmpeg", "-codecs").CombinedOutput()
-	codecsString := string(codecs)
+// Check for available codecs and hardware accelerators
+func checkFfmpeg() (map[string]string, error) {
+	ret := make(map[string]string)
+
+	version, err := exec.Command("ffmpeg", "-version").CombinedOutput()
 
 	if err != nil {
 		return nil, errors.New("Cannot find ffmpeg/ffprobe on your system.\nMake sure to install it first: https://github.com/Niek/superview/#requirements")
 	}
 
-	ret := make(map[string]string)
-	ret["version"] = strings.Split(codecsString[strings.Index(codecsString, "ffmpeg version ")+15:], " ")[0]
-	ret["h264"] = strconv.FormatBool(strings.Contains(codecsString, "H.264"))
-	ret["h265"] = strconv.FormatBool(strings.Contains(codecsString, "H.265"))
+	ret["version"] = strings.Split(string(version), " ")[2]
+
+	// split on newline, skip first line
+	accels, err := exec.Command("ffmpeg", "-hwaccels", "-hide_banner").CombinedOutput()
+	accelsArr := strings.Split(string(accels), "\n")
+	for i := 1; i < len(accelsArr); i++ {
+		if len(accelsArr[i]) != 0 {
+			ret["accels"] += accelsArr[i] + ","
+		}
+	}
+
+	// split on newline, skip first 10 lines
+	encoders, err := exec.Command("ffmpeg", "-encoders", "-hide_banner").CombinedOutput()
+	encodersArr := strings.Split(string(encoders), "\n")
+	for i := 10; i < len(encodersArr); i++ {
+		if strings.Index(encodersArr[i], " V") == 0 {
+			enc := strings.Split(encodersArr[i], " ")
+			if strings.Index(enc[2], "h264") == 0 || strings.Index(enc[2], "libx264") == 0 {
+				ret["h264"] += enc[2] + ","
+			} else if strings.Index(enc[2], "h264") == 0 || strings.Index(enc[2], "libx265") == 0 {
+				ret["h265"] += enc[2] + ","
+			}
+		}
+	}
+
+	ret["accels"] = strings.Trim(ret["accels"], ",")
+	ret["h264"] = strings.Trim(ret["h264"], ",")
+	ret["h265"] = strings.Trim(ret["h265"], ",")
 
 	return ret, nil
 }
@@ -144,9 +169,23 @@ func generatePGM(video *VideoSpecs, squeeze bool) error {
 	return nil
 }
 
-func encodeVideo(video *VideoSpecs, bitrate int, output string, callback func(float64)) error {
+func findEncoder(codec string, ffmpeg map[string]string) string {
+	codec = strings.ToLower(codec)
+	encoder := strings.Split(ffmpeg[codec], ",")[0]
+	for _, acc := range strings.Split(ffmpeg["accels"], ",") {
+		for _, enc := range strings.Split(ffmpeg[codec], ",") {
+			if strings.Index(enc, acc) != -1 {
+				encoder = enc
+			}
+		}
+	}
+
+	return encoder
+}
+
+func encodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, callback func(float64)) error {
 	// Starting encoder, write progress to stdout pipe
-	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", video.File, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", video.Streams[0].Codec, "-b:v", strconv.Itoa(bitrate), "-c:a", "aac", "-x265-params", "log-level=error", output)
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", video.File, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", encoder, "-b:v", strconv.Itoa(bitrate), "-c:a", "aac", "-x265-params", "log-level=error", output)
 	stdout, err := cmd.StdoutPipe()
 	rd := bufio.NewReader(stdout)
 
