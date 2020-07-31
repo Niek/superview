@@ -59,7 +59,7 @@ func checkFfmpeg() (map[string]string, error) {
 			enc := strings.Split(encodersArr[i], " ")
 			if strings.Index(enc[2], "h264") == 0 || strings.Index(enc[2], "libx264") == 0 {
 				ret["h264"] += enc[2] + ","
-			} else if strings.Index(enc[2], "h264") == 0 || strings.Index(enc[2], "libx265") == 0 {
+			} else if strings.Index(enc[2], "h265") == 0 || strings.Index(enc[2], "libx265") == 0 || strings.Index(enc[2], "hevc") == 0 {
 				ret["h265"] += enc[2] + ","
 			}
 		}
