@@ -72,16 +72,11 @@ func main() {
 				}
 
 				enc := video.Streams[0].Codec
-				switch encoder.Selected {
-				case "Force H264 encoder":
-					enc = "h264"
-					break
-				case "Force H265 encoder":
-					enc = "h265"
-					break
+				if encoder.Selected != "Use same video codec as input file" {
+					enc = strings.Split(encoder.Selected, " ")[0]
 				}
 
-				err = encodeVideo(video, findEncoder(enc, ffmpeg), br, uri, func(v float64) { prog.SetValue(v / 100) })
+				err = encodeVideo(video, findEncoder(enc, ffmpeg, video), br, uri, func(v float64) { prog.SetValue(v / 100) })
 				if err != nil {
 					dialog.ShowError(err, window)
 					return
@@ -116,7 +111,7 @@ func main() {
 				dialog.ShowError(err, window)
 				return
 			}
-			info.SetText(fmt.Sprintf("%s\nFile opened: %s\nInfo: %vx%v px, %s @ %v Mb/s, %.1f secs", info.Text, uri, video.Streams[0].Width, video.Streams[0].Height, video.Streams[0].Codec, video.Streams[0].BitrateInt/1024/1024, video.Streams[0].DurationFloat))
+			info.SetText(fmt.Sprintf("%sFile opened: %s\nInfo: %vx%v px, %s @ %v Mb/s, %.1f secs", info.Text, uri, video.Streams[0].Width, video.Streams[0].Height, video.Streams[0].Codec, video.Streams[0].BitrateInt/1024/1024, video.Streams[0].DurationFloat))
 			start.Enable()
 		}, window)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp4", ".avi", ".MP4", ".AVI"}))
@@ -128,14 +123,12 @@ func main() {
 		dialog.ShowError(err, window)
 		open.Disable()
 	}
-	info.SetText(fmt.Sprintf("ffmpeg version: %s\nHardware accellerators: %s\nH.264 encoders: %s\nH.265/HEVC encoders: %s", ffmpeg["version"], ffmpeg["accels"], ffmpeg["h264"], ffmpeg["h265"]))
+	info.SetText(getHeader(ffmpeg))
 
-	encoderOptions := []string{"Use same encoder as input file"}
-	if len(ffmpeg["h264"]) > 0 {
-		encoderOptions = append(encoderOptions, "Force H264 encoder")
-	}
-	if len(ffmpeg["h265"]) > 0 {
-		encoderOptions = append(encoderOptions, "Force H265 encoder")
+	encoderOptions := []string{"Use same video codec as input file"}
+
+	for _, enc := range strings.Split(ffmpeg["encoders"], ",") {
+		encoderOptions = append(encoderOptions, enc+" encoder")
 	}
 	encoder = widget.NewSelect(encoderOptions, func(s string) {
 

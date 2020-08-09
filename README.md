@@ -42,6 +42,7 @@ Usage:
 Application Options:
   -i, --input=FILE         The input video filename
   -o, --output=FILE        The output video filename (default: output.mp4)
+  -e, --encoder=ENCODER    The encoder to use, use -h to see a list. If not specified, it takes the standard encoder of the input file codec
   -b, --bitrate=BITRATE    The bitrate in bytes/second to encode in. If not specified, take the same bitrate as the input file
   -s, --squeeze            Squeeze 4:3 video stretched to 16:9 (e.g. Caddx Tarsier 2.7k60)
 

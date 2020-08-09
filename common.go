@@ -57,19 +57,20 @@ func checkFfmpeg() (map[string]string, error) {
 	for i := 10; i < len(encodersArr); i++ {
 		if strings.Index(encodersArr[i], " V") == 0 {
 			enc := strings.Split(encodersArr[i], " ")
-			if strings.Index(enc[2], "h264") == 0 || strings.Index(enc[2], "libx264") == 0 {
-				ret["h264"] += enc[2] + ","
-			} else if strings.Index(enc[2], "h265") == 0 || strings.Index(enc[2], "libx265") == 0 || strings.Index(enc[2], "hevc") == 0 {
-				ret["h265"] += enc[2] + ","
+			if strings.Index(enc[2], "264") != -1 || strings.Index(enc[2], "265") != -1 || strings.Index(enc[2], "hevc") != -1 {
+				ret["encoders"] += enc[2] + ","
 			}
 		}
 	}
 
 	ret["accels"] = strings.Trim(ret["accels"], ",")
-	ret["h264"] = strings.Trim(ret["h264"], ",")
-	ret["h265"] = strings.Trim(ret["h265"], ",")
+	ret["encoders"] = strings.Trim(ret["encoders"], ",")
 
 	return ret, nil
+}
+
+func getHeader(ffmpeg map[string]string) string {
+	return fmt.Sprintf("- ffmpeg version: %s\n- Hardware accelerators: %s\n- H.264/H.265 encoders: %s\n\n", ffmpeg["version"], ffmpeg["accels"], ffmpeg["encoders"])
 }
 
 func checkVideo(file string) (*VideoSpecs, error) {
@@ -169,12 +170,12 @@ func generatePGM(video *VideoSpecs, squeeze bool) error {
 	return nil
 }
 
-func findEncoder(codec string, ffmpeg map[string]string) string {
-	codec = strings.ToLower(codec)
-	encoder := strings.Split(ffmpeg[codec], ",")[0]
-	for _, acc := range strings.Split(ffmpeg["accels"], ",") {
-		for _, enc := range strings.Split(ffmpeg[codec], ",") {
-			if strings.Index(enc, acc) != -1 {
+func findEncoder(codec string, ffmpeg map[string]string, video *VideoSpecs) string {
+	encoder := video.Streams[0].Codec
+
+	if codec != "" {
+		for _, enc := range strings.Split(ffmpeg["encoders"], ",") {
+			if enc == codec {
 				encoder = enc
 			}
 		}
@@ -195,7 +196,7 @@ func encodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, 
 
 	err = cmd.Start()
 	if err != nil {
-		return fmt.Errorf("Error starting ffmpeg, output is:\n%s", stdout)
+		return fmt.Errorf("Error starting ffmpeg, output is:\n%s", err)
 	}
 
 	// Kill encoder process on Ctrl+C
@@ -224,7 +225,7 @@ func encodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, 
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("Error running ffmpeg, output is:\n%s", stdout)
+		return fmt.Errorf("Error running ffmpeg, output is:\n%s", err)
 	}
 
 	return nil
