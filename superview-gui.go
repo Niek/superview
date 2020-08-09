@@ -49,7 +49,7 @@ func main() {
 				return
 			}
 
-			uri := file.URI().String()
+			uri := strings.ReplaceAll(file.URI().String(), "file://", "")
 			err = file.Close()
 			if err != nil {
 				fyne.LogError("Failed to close stream", err)
@@ -111,7 +111,7 @@ func main() {
 				dialog.ShowError(err, window)
 				return
 			}
-			info.SetText(fmt.Sprintf("%sFile opened: %s\nInfo: %vx%v px, %s @ %v Mb/s, %.1f secs", info.Text, uri, video.Streams[0].Width, video.Streams[0].Height, video.Streams[0].Codec, video.Streams[0].BitrateInt/1024/1024, video.Streams[0].DurationFloat))
+			info.SetText(fmt.Sprintf("%sFile opened: %s\nInfo: %vx%v px, %s @ %v Mb/s, %.1f secs", info.Text, video.File, video.Streams[0].Width, video.Streams[0].Height, video.Streams[0].Codec, video.Streams[0].BitrateInt/1024/1024, video.Streams[0].DurationFloat))
 			start.Enable()
 		}, window)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp4", ".avi", ".MP4", ".AVI"}))
