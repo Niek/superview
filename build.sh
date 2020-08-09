@@ -44,7 +44,12 @@ for program in "superview-cli" "superview-gui"; do
             elif [ $GOOS == "linux" ]; then
                 output_name+=".tar.gz"
             else
-                output_name+=".app"
+                if command -v create-dmg &> /dev/null; then
+                    create-dmg --hdiutil-quiet --volname "Superview" --volicon "Icon.png" "${output_name}.dmg" "${output_name}.app"
+                    output_name+=".dmg"
+                else
+                    output_name+=".app"
+                fi
             fi
         fi
 
@@ -56,4 +61,6 @@ done
 
 git tag v${VERSION}
 git push origin --tags
-hub release create -do $(for f in "${files[@]}"; do echo "-a "$f; done) -m "Release v${VERSION}" v${VERSION}
+if command -v hub &> /dev/null; then
+    hub release create -do $(for f in "${files[@]}"; do echo "-a "$f; done) -m "Release v${VERSION}" v${VERSION}
+fi
