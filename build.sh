@@ -31,13 +31,13 @@ for program in "superview-cli" "superview-gui"; do
 
         if [ "$program" == "superview-cli" ]; then
             output_name="build/${output_name}"
-            env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o $output_name ${program}.go common.go
+            env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o $output_name ${program}.go
             if [ $? -ne 0 ]; then
                 echo "An error has occurred! Aborting the script execution..."
                 exit 1
             fi
         else
-            fyne-cross ${GOOS} -silent -arch ${GOARCH} -ldflags="-s -w" -output ${output_name} "${program}.go common.go"
+            fyne-cross ${GOOS} -silent -arch ${GOARCH} -ldflags="-s -w" -output ${output_name} "${program}.go"
             output_name="fyne-cross/dist/${GOOS}-${GOARCH}/${output_name}"
             if [ $GOOS == "windows" ]; then
                 output_name+=".zip"

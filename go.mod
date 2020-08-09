@@ -1,4 +1,4 @@
-module superview-gui-windows-amd64-v0.7
+module superview
 
 go 1.13
 

@@ -52,7 +52,7 @@ Help Options:
 
 ## Development
 
-If you want superview from source, run `go build superview-gui.go common.go` or `go build superview-cli.go common.go` depending on which version you'd like to build. See [build.sh](/build.sh) for an example how to cross-compile.
+If you want superview from source, run `go build superview-gui.go` or `go build superview-cli.go` depending on which version you'd like to build. See [build.sh](/build.sh) for an example how to cross-compile.
 
 ## Contributors ✨
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"superview/common"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -20,12 +21,12 @@ func main() {
 	fmt.Println("===> Superview - dynamic video stretching <===\n")
 
 	// Check for ffmpeg
-	ffmpeg, err := checkFfmpeg()
+	ffmpeg, err := common.CheckFfmpeg()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Print(getHeader(ffmpeg))
+	fmt.Print(common.GetHeader(ffmpeg))
 
 	// Parse flags
 	_, err = flags.Parse(&opts)
@@ -39,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	video, err := checkVideo(opts.Input)
+	video, err := common.CheckVideo(opts.Input)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,13 +50,13 @@ func main() {
 		opts.Bitrate = video.Streams[0].BitrateInt
 	}
 
-	opts.Encoder = findEncoder(opts.Encoder, ffmpeg, video)
+	opts.Encoder = common.FindEncoder(opts.Encoder, ffmpeg, video)
 
-	generatePGM(video, opts.Squeeze)
+	common.GeneratePGM(video, opts.Squeeze)
 
 	fmt.Printf("Re-encoding video with %s encoder at %d MB/s bitrate\n", opts.Encoder, opts.Bitrate/1024/1024)
 
-	err = encodeVideo(video, opts.Encoder, opts.Bitrate, opts.Output, func(v float64) {
+	err = common.EncodeVideo(video, opts.Encoder, opts.Bitrate, opts.Output, func(v float64) {
 		fmt.Printf("\rEncoding progress: %.2f%%", v)
 	})
 	if err != nil {

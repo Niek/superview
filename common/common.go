@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"bufio"
@@ -31,10 +31,12 @@ type VideoSpecs struct {
 }
 
 // Check for available codecs and hardware accelerators
-func checkFfmpeg() (map[string]string, error) {
+func CheckFfmpeg() (map[string]string, error) {
 	ret := make(map[string]string)
 
-	version, err := exec.Command("ffmpeg", "-version").CombinedOutput()
+	cmd := exec.Command("ffmpeg", "-version")
+	prepareBackgroundCommand(cmd)
+	version, err := cmd.CombinedOutput()
 
 	if err != nil {
 		return nil, errors.New("Cannot find ffmpeg/ffprobe on your system.\nMake sure to install it first: https://github.com/Niek/superview/#requirements")
@@ -43,7 +45,9 @@ func checkFfmpeg() (map[string]string, error) {
 	ret["version"] = strings.Split(string(version), " ")[2]
 
 	// split on newline, skip first line
-	accels, err := exec.Command("ffmpeg", "-hwaccels", "-hide_banner").CombinedOutput()
+	cmd = exec.Command("ffmpeg", "-hwaccels", "-hide_banner")
+	prepareBackgroundCommand(cmd)
+	accels, err := cmd.CombinedOutput()
 	accelsArr := strings.Split(strings.ReplaceAll(string(accels), "\r\n", "\n"), "\n")
 	for i := 1; i < len(accelsArr); i++ {
 		if len(accelsArr[i]) != 0 {
@@ -52,7 +56,9 @@ func checkFfmpeg() (map[string]string, error) {
 	}
 
 	// split on newline, skip first 10 lines
-	encoders, err := exec.Command("ffmpeg", "-encoders", "-hide_banner").CombinedOutput()
+	cmd = exec.Command("ffmpeg", "-encoders", "-hide_banner")
+	prepareBackgroundCommand(cmd)
+	encoders, err := cmd.CombinedOutput()
 	encodersArr := strings.Split(strings.ReplaceAll(string(encoders), "\r\n", "\n"), "\n")
 	for i := 10; i < len(encodersArr); i++ {
 		if strings.Index(encodersArr[i], " V") == 0 {
@@ -69,13 +75,15 @@ func checkFfmpeg() (map[string]string, error) {
 	return ret, nil
 }
 
-func getHeader(ffmpeg map[string]string) string {
+func GetHeader(ffmpeg map[string]string) string {
 	return fmt.Sprintf("- ffmpeg version: %s\n- Hardware accelerators: %s\n- H.264/H.265 encoders: %s\n\n", ffmpeg["version"], ffmpeg["accels"], ffmpeg["encoders"])
 }
 
-func checkVideo(file string) (*VideoSpecs, error) {
+func CheckVideo(file string) (*VideoSpecs, error) {
 	// Check specs of the input video (codec, dimensions, duration, bitrate)
-	out, err := exec.Command("ffprobe", "-i", file, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-print_format", "json").CombinedOutput()
+	cmd := exec.Command("ffprobe", "-i", file, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,duration,bit_rate", "-print_format", "json")
+	prepareBackgroundCommand(cmd)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Error running ffprobe, output is:\n%s", out)
 	}
@@ -96,7 +104,7 @@ func checkVideo(file string) (*VideoSpecs, error) {
 	return &specs, nil
 }
 
-func generatePGM(video *VideoSpecs, squeeze bool) error {
+func GeneratePGM(video *VideoSpecs, squeeze bool) error {
 	var outX int
 
 	if squeeze {
@@ -170,7 +178,7 @@ func generatePGM(video *VideoSpecs, squeeze bool) error {
 	return nil
 }
 
-func findEncoder(codec string, ffmpeg map[string]string, video *VideoSpecs) string {
+func FindEncoder(codec string, ffmpeg map[string]string, video *VideoSpecs) string {
 	encoder := video.Streams[0].Codec
 
 	if codec != "" {
@@ -184,9 +192,10 @@ func findEncoder(codec string, ffmpeg map[string]string, video *VideoSpecs) stri
 	return encoder
 }
 
-func encodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, callback func(float64)) error {
+func EncodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, callback func(float64)) error {
 	// Starting encoder, write progress to stdout pipe
 	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", video.File, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", encoder, "-b:v", strconv.Itoa(bitrate), "-c:a", "aac", "-x265-params", "log-level=error", output)
+	prepareBackgroundCommand(cmd)
 	stdout, err := cmd.StdoutPipe()
 	rd := bufio.NewReader(stdout)
 

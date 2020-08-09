@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"superview/common"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
@@ -16,7 +17,7 @@ import (
 )
 
 func main() {
-	var video *VideoSpecs
+	var video *common.VideoSpecs
 	var ffmpeg map[string]string
 	var encoder *widget.Select
 
@@ -59,7 +60,7 @@ func main() {
 			prog.Show()
 
 			go func() {
-				err := generatePGM(video, squeeze.Checked)
+				err := common.GeneratePGM(video, squeeze.Checked)
 				if err != nil {
 					prog.Hide()
 					dialog.ShowError(err, window)
@@ -76,7 +77,7 @@ func main() {
 					enc = strings.Split(encoder.Selected, " ")[0]
 				}
 
-				err = encodeVideo(video, findEncoder(enc, ffmpeg, video), br, uri, func(v float64) { prog.SetValue(v / 100) })
+				err = common.EncodeVideo(video, common.FindEncoder(enc, ffmpeg, video), br, uri, func(v float64) { prog.SetValue(v / 100) })
 				if err != nil {
 					dialog.ShowError(err, window)
 					return
@@ -106,7 +107,7 @@ func main() {
 				fyne.LogError("Failed to close stream", err)
 			}
 
-			video, err = checkVideo(uri)
+			video, err = common.CheckVideo(uri)
 			if err != nil {
 				dialog.ShowError(err, window)
 				return
@@ -118,12 +119,12 @@ func main() {
 		fd.Show()
 	})
 
-	ffmpeg, err := checkFfmpeg()
+	ffmpeg, err := common.CheckFfmpeg()
 	if err != nil {
 		dialog.ShowError(err, window)
 		open.Disable()
 	}
-	info.SetText(getHeader(ffmpeg))
+	info.SetText(common.GetHeader(ffmpeg))
 
 	encoderOptions := []string{"Use same video codec as input file"}
 
