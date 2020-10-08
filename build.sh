@@ -45,8 +45,13 @@ for program in "superview-cli" "superview-gui"; do
                 output_name+=".tar.gz"
             else
                 if command -v create-dmg &> /dev/null; then
+                    # Create the DMG file
                     create-dmg --hdiutil-quiet --volname "Superview" --volicon "Icon.png" "${output_name}.dmg" "${output_name}.app"
                     output_name+=".dmg"
+                    # Sign the DMG including all content
+                    if command -v codesign &> /dev/null; then
+                        codesign --force --verify --verbose --sign "Apple Distribution: Nivadema B.V. (N577R5DT64)" "${output_name}"
+                    fi
                 else
                     output_name+=".app"
                 fi
