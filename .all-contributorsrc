@@ -33,6 +33,15 @@
         "ideas",
         "test"
       ]
+    },
+    {
+      "login": "tommaier123",
+      "name": "Nova_Max",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/40432491?v=4",
+      "profile": "https://github.com/tommaier123",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
