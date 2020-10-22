@@ -18,8 +18,8 @@ Here is a quick animation showing the scaling, note how the text in the center s
 This program requires FFmpeg to be installed on your computer. If needed, please install it using one of these ways:
 
 - **Linux**: install from your local package manager, for example: `apt instal ffmpeg`
-- **Windows**: Download from https://ffmpeg.zeranoe.com/builds/ and extract the ZIP file in the same directory as superview
-- **macOS**: Download from https://ffmpeg.zeranoe.com/builds/ and put in the same folder as superview, or install using Homebrew: `brew install ffmpeg`
+- **Windows**: Download from https://www.gyan.dev/ffmpeg/builds/ and extract the `ffmpeg-release-full` 7ZIP file in the same directory as superview
+- **macOS**: Download from https://evermeet.cx/ffmpeg/ and put in the same folder as superview, or install using Homebrew: `brew install ffmpeg`
 
 ## Installation
 
