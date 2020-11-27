@@ -194,7 +194,13 @@ func FindEncoder(codec string, ffmpeg map[string]string, video *VideoSpecs) stri
 
 func EncodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, callback func(float64)) error {
 	// Starting encoder, write progress to stdout pipe
-	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", video.File, "-i", "x.pgm", "-i", "y.pgm", "-filter_complex", "remap,format=yuv444p,format=yuv420p", "-c:v", encoder, "-b:v", strconv.Itoa(bitrate), "-c:a", "aac", "-x265-params", "log-level=error", output)
+	vaapi_args := []string{}
+	extra_filters := ""
+	if encoder.HasSuffix("_vaapi") {
+		vaapi_args := []string{"-vaapi_device", "/dev/dri/renderD128"}
+		extra_filters := ",format=nv12,hwupload"
+	}
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-progress", "pipe:1", "-loglevel", "panic", "-y", "-re", "-i", video.File, "-i", "x.pgm", "-i", "y.pgm", vaapi_args..., "-filter_complex", "remap,format=yuv444p,format=yuv420p" + extra_filters, "-c:v", encoder, "-b:v", strconv.Itoa(bitrate), "-c:a", "aac", "-x265-params", "log-level=error", output)
 	prepareBackgroundCommand(cmd)
 	stdout, err := cmd.StdoutPipe()
 	rd := bufio.NewReader(stdout)
