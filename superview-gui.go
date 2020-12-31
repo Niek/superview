@@ -83,6 +83,12 @@ func main() {
 					return
 				}
 
+				err = common.CleanUp()
+				if err != nil {
+					dialog.ShowError(err, window)
+					return
+				}
+
 				prog.Hide()
 				dialog.ShowInformation("Encode done", "Encode finished, your output file can be found here:\n"+uri, window)
 			}()

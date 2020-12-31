@@ -239,3 +239,13 @@ func EncodeVideo(video *VideoSpecs, encoder string, bitrate int, output string, 
 
 	return nil
 }
+
+func CleanUp() error {
+	for _, file := range []string{"x.pgm", "y.pgm"} {
+		if err := os.Remove(file); err != nil {
+			return fmt.Errorf("Error deleting %s, output is:\n%s", file, err)
+		}
+	}
+
+	return nil
+}

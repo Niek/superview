@@ -63,5 +63,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := common.CleanUp(); err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf("Done! You can open the output file %s to see the result\n", opts.Output)
 }
