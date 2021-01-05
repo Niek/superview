@@ -3,11 +3,9 @@ module superview
 go 1.13
 
 require (
-	fyne.io/fyne v1.4.2
-	github.com/fyne-io/mobile v0.1.2 // indirect
+	fyne.io/fyne v1.4.3
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/lucor/fyne-cross/v2 v2.2.1 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
