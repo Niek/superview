@@ -8,7 +8,6 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
-	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
